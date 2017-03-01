@@ -37,6 +37,8 @@ class ofApp : public ofBaseApp{
     // vector to store all values
     vector <ofVec3f > points;
     vector <ofVec3f > sizes;
+    vector <int > colors;
+
     
     ofVbo vbo;
     ofShader shader;
@@ -44,6 +46,8 @@ class ofApp : public ofBaseApp{
     ofTexture texture;
     
     ofFbo fbo;
+    
+    int numAgents;
 
 
 

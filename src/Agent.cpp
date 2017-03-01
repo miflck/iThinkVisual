@@ -22,7 +22,9 @@ void Agent::setup(){
     float theta1 = ofRandom(0, TWO_PI);
     float theta2 = ofRandom(0, TWO_PI);
     
-    float radius = ofRandom(50,500);
+    float radius = ofRandom(0,600);
+    
+    
 
     
     ofVec3f p;
@@ -31,17 +33,41 @@ void Agent::setup(){
     p *= radius;
     
     
+    
+    
     homeposition.set(p);
 
     position.set(p);
     target.set(ofRandom(-ofGetWidth(),ofGetWidth()),ofRandom(-ofGetHeight(),ofGetHeight()),0);
     startMoving();
+    
+    
+    seekforce=0.1;
+    repulsionforce=0.6;
+    spinforce=0.005;
+    
 }
 
 //--------------------------------------------------------------
 void Agent::update(){
-    move();    
+    repulsionTarget.set(ofGetMouseX()-ofGetWidth()/2,-ofGetMouseY()+ofGetHeight()/2,0);
+   // ofVec3f d=ofVec3f(0,0,0)-position;
+   // d.normalize();
+   // d*=10;
+    
+    //repulsionTarget.set(position+d);
 
+    //move();
+    
+   // if(ofGetFrameNum()%120==0)repulsionRadius=ofRandom(0,1000);
+    applyForce(seek(target));
+    applyForce(repulsion(ofVec3f(0,0,0)));
+    applyForce(rotateAround(ofVec3f(0,0,0)));
+
+    velocity+=acceleration;
+    velocity*=0.99;
+    position+= velocity;
+    acceleration.set(0,0,0);
 }
 
 //--------------------------------------------------------------
@@ -74,12 +100,12 @@ void Agent::move(){
         }
         
         ofVec3f steer=desired-velocity;
-        steer.limit(0.09);
+        steer.limit(0.05);
         acc+=steer;
         velocity+=acc;
         p+=velocity;
         
-        if(d<1){
+        if(d<0.01){
             //p.set(target);
             stopMoving();
         }
@@ -133,3 +159,52 @@ void Agent::goHome(){
     target.set(homeposition);
     startMoving();
 }
+
+
+ofVec3f Agent::repulsion(ofVec3f r){
+    ofVec3f p(position);
+    ofVec3f rt(r);
+    ofVec3f dir=p-rt;
+    float d=dir.length();
+    dir.normalize();
+    if(d < repulsionRadius){
+    float m = ofMap(d,0,repulsionRadius,maxrepulsion,0,true);
+        dir*=m;
+           }else{
+               dir*=0;
+           }
+    dir.limit(repulsionforce);
+    
+    return dir;
+}
+
+ofVec3f Agent::rotateAround(ofVec3f t){
+   
+    ofPoint delta = position - t;
+    float d=delta.length();
+    delta.normalize();
+    ofVec3f spin;
+    spin.x += -delta.y*maxspeed;
+    spin.y += delta.x*maxspeed;
+    spin.limit(spinforce);
+
+    return spin;
+    
+
+}
+
+
+ofVec3f Agent::seek(ofVec3f t){
+    ofVec3f p(position);
+    ofVec3f desired=t-p;
+    desired.normalize();
+    desired*=maxspeed;
+    ofVec3f steer=desired-velocity;
+    steer.limit(seekforce);
+    return steer;
+}
+
+void Agent::applyForce(ofVec3f f){
+    acceleration+= f;
+}
+

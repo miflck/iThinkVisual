@@ -2,7 +2,10 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    for (int i=0;i<20000;i++){
+    
+    int numAgents=50000;
+    
+    for (int i=0;i<numAgents;i++){
         
     //    circles.push_back(shared_ptr<ofxBox2dCircle>(new ofxBox2dCircle));
 
@@ -12,13 +15,14 @@ void ofApp::setup(){
         agents.push_back(a);
         
         // we are passing the size in as a normal x position
-        float size = ofRandom(5, 20);
+        float size = ofRandom(5, 5);
         sizes.push_back(ofVec3f(size));
+        colors.push_back(ofRandom(1));
 
 
     }
-    
-    vbo.setNormalData(&sizes[0], 20000, GL_STATIC_DRAW);
+    // fill in the colors and vertices
+    vbo.setNormalData(&sizes[0], numAgents, GL_STATIC_DRAW);
 
     ofBackgroundHex(0x000000);
     ofSetFrameRate(60);
@@ -69,7 +73,8 @@ void ofApp::update(){
     }
     int total = (int)points.size();
     vbo.setVertexData(&points[0], total, GL_STATIC_DRAW);
-    vbo.setNormalData(&sizes[0], 20000, GL_STATIC_DRAW);
+    vbo.setNormalData(&sizes[0], total, GL_STATIC_DRAW);
+    // fill in the colors and vertices
 
     //vbo.setColorData(&sizes[0], 10000, GL_STATIC_DRAW);
 
@@ -92,7 +97,7 @@ void ofApp::draw(){
 
     glDepthMask(GL_FALSE);
 
-    ofSetColor(255, 100, 90,80);
+    ofSetColor(255, 100, 90,50);
     
     // this makes everything look glowy :)
    ofEnableBlendMode(OF_BLENDMODE_ADD);

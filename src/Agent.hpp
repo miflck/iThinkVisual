@@ -27,7 +27,9 @@ public:
     void startMoving();
     void stopMoving();
     bool bIsMoving=false;
-    float maxspeed=15;
+    float maxspeed=10;
+    float maxrepulsion=20;
+
     
     
     ofPoint pos;               //Position
@@ -43,6 +45,26 @@ public:
     void setRandomPosition();
     void setRandomHomePosition();
 
+    ofVec3f cicleVec;
+    
+    void applyForce(ofVec3f f);
+    
+    
+    ofVec3f seek(ofVec3f t);
+    
+    ofVec3f repulsion(ofVec3f r);
+    
+    
+    ofVec3f rotateAround(ofVec3f r);
+
+    
+    float seekforce;
+    float repulsionforce;
+    float repulsionRadius;
+    
+    float spinforce;
+
+    
     
 private:
 
@@ -51,6 +73,10 @@ private:
     ofVec3f velocity;
 
     ofVec3f homeposition;
+    
+    ofVec3f acceleration;
+    
+    ofVec3f repulsionTarget;
 
     
 };
