@@ -95,6 +95,20 @@ void ofApp::setup(){
     gui.loadFromFile("settings.xml");
 
     me=1;
+    
+    
+    
+    mainOutputSyphonServer.setName("Screen Output");
+    //individualTextureSyphonServer.setName("Texture Output");
+    
+    mClient.setup();
+    
+    //using Syphon app Simple Server, found at http://syphon.v002.info/
+    mClient.set("","Simple Server");
+
+    
+    
+    
 }
 
 //--------------------------------------------------------------
@@ -295,9 +309,25 @@ void ofApp::draw(){
     ofDrawBitmapString(info, 20, 20);
     */
 
-    ofSetColor(0, 255, 0);
+   // ofSetColor(0, 255, 0);
 
-    ofDrawBox(ofGetWidth()/2, ofGetHeight()/2, 0, 10, 10, 10);
+   // ofDrawBox(ofGetWidth()/2, ofGetHeight()/2, 0, 10, 10, 10);
+    
+    
+    
+    
+    
+    
+    
+    mClient.draw(50, 50);
+    
+    mainOutputSyphonServer.publishScreen();
+        
+    
+    // Off-Syphonscreen stuff...
+    if(!bHide){
+        gui.draw();
+    }
     
     
     // draw the average volume:
@@ -323,17 +353,11 @@ void ofApp::draw(){
         
         if( i == volHistory.size() -1 ) ofVertex(i, 400);
     }
-    ofEndShape(false);		
+    ofEndShape(false);
     
     ofPopMatrix();
     ofPopStyle();
-    
-    
-    // auto draw?
-    // should the gui control hiding?
-    if(!bHide){
-        gui.draw();
-    }
+
 
     
 }
@@ -347,9 +371,9 @@ void ofApp::addAgents(int num){
 
 void ofApp::shrink(){
     int diff=targetPointSize-pointsize;
-    if(diff>0)pointsize+=0.5;
-    if(diff<0)pointsize-=0.5;
-    cout<<"t"<<targetPointSize<<" diff "<<diff<<endl;
+    if(diff>0)pointsize+=1;
+    if(diff<0)pointsize-=1;
+    //cout<<"t"<<targetPointSize<<" diff "<<diff<<endl;
     }
 
 //--------------------------------------------------------------

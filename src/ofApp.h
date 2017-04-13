@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "Agent.hpp"
 #include "ofxGui.h"
+#include "ofxSyphon.h"
+
 
 
 
@@ -100,5 +102,10 @@ class ofApp : public ofBaseApp{
     void shrink();
     int targetPointSize;
 
+    ofxSyphonServer mainOutputSyphonServer;
+    ofxSyphonServer individualTextureSyphonServer;
+    
+    ofxSyphonClient mClient;
+    
 		
 };
