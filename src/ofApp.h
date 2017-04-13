@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 #include "Agent.hpp"
+#include "ofxGui.h"
+
 
 
 class ofApp : public ofBaseApp{
@@ -49,7 +51,8 @@ class ofApp : public ofBaseApp{
     
     int numAgents;
 
-
+    int renderdAgents;
+    int pointsize;
     
     
     
@@ -69,7 +72,33 @@ class ofApp : public ofBaseApp{
     ofSoundStream soundStream;
 
     
+    bool bHide;
+
+    ofxFloatSlider homeforce;
+    ofxFloatSlider wanderforce;
+    ofxFloatSlider rotationforce;
+
+
+    ofxFloatSlider maxvol;
+
+    ofxColorSlider color;
+    ofxPanel gui;
+
     
+    ofxFloatSlider fadespeed;
+
+    int me, other;
+    
+    vector<ofPolyline> polylines;
+    ofPolyline polyline;
+    
+    void addAgents(int num);
+   int targetAgentsNum;
+    
+    int totalNumAgents;
+    
+    void shrink();
+    int targetPointSize;
 
 		
 };

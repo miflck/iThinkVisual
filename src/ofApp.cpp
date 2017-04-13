@@ -5,10 +5,10 @@ void ofApp::setup(){
     
     //int numAgents=50000;
     
-    int numAgents=50000;
-
-    
-    for (int i=0;i<numAgents;i++){
+     totalNumAgents=70000;
+    renderdAgents=1;
+    targetAgentsNum=1;
+    for (int i=0;i<totalNumAgents;i++){
         
     //    circles.push_back(shared_ptr<ofxBox2dCircle>(new ofxBox2dCircle));
 
@@ -26,8 +26,18 @@ void ofApp::setup(){
 
 
     }
+    
+    
+    //sizes[0]=ofVec3f(50);
+    //sizes[1]=ofVec3f(20);
+    //sizes[2]=ofVec3f(10);
+    
+    pointsize=200;
+    targetPointSize=200;
+    
+    
     // fill in the colors and vertices
-    vbo.setNormalData(&sizes[0], numAgents, GL_STATIC_DRAW);
+    vbo.setNormalData(&sizes[0], totalNumAgents, GL_STATIC_DRAW);
 
     ofBackgroundHex(0x000000);
     ofSetFrameRate(60);
@@ -40,7 +50,7 @@ void ofApp::setup(){
     shader.load("shader/shader");
     
     // set the camera distance
-    camDist  = 1605;
+    camDist  = 1305;
     camera.setDistance(camDist);
     
     
@@ -68,17 +78,23 @@ void ofApp::setup(){
     left.assign(bufferSize, 0.0);
     right.assign(bufferSize, 0.0);
     volHistory.assign(400, 0.0);
-    
     bufferCounter	= 0;
     drawCounter		= 0;
     smoothedVol     = 0.0;
     scaledVol		= 0.0;
-    
     soundStream.setup(this, 0, 2, 44100, bufferSize, 4);
+    gui.setup(); // most of the time you don't need a name
+    //gui.add(color.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
+   // gui.add(homeforce.setup("homeforce", 1, 0, 5));
+    gui.add(wanderforce.setup("wanderforce", 0.5, 0.0f, 1.5f));
+    gui.add(maxvol.setup("maxvol", 0.05, 0.001f, 0.07f));
+    gui.add(fadespeed.setup("fadespeed", 10, 0.0f, 30.0f));
+    gui.add(rotationforce.setup("rotation", 0.f, -.05f, 0.05f));
 
     
+    gui.loadFromFile("settings.xml");
 
-
+    me=1;
 }
 
 //--------------------------------------------------------------
@@ -92,10 +108,13 @@ void ofApp::update(){
     }*/
     
     points.clear();
+    sizes.clear();
     
-    for(int i=0;i<agents.size();i++){
-    agents[i]->update();
-       points.push_back(agents[i]->getPosition());
+    for(int i=0;i<renderdAgents;i++){
+        agents[i]->update();
+        points.push_back(agents[i]->getPosition());
+        float size = ofRandom(pointsize, pointsize);
+        sizes.push_back(ofVec3f(size));
     }
     int total = (int)points.size();
     vbo.setVertexData(&points[0], total, GL_STATIC_DRAW);
@@ -108,7 +127,7 @@ void ofApp::update(){
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 
     ofEnableAlphaBlending();
-    ofSetColor(0,0,0,20);
+    ofSetColor(0,0,0,fadespeed);
     ofDrawRectangle(0, 0, fbo.getWidth(), fbo.getHeight());
     fbo.end();
     
@@ -119,8 +138,8 @@ void ofApp::update(){
     float mappedVol = ofMap(smoothedVol, 0.0, 0.05, 0.0, ofGetHeight()*2, true);
     float mappedVolTheta = ofMap(smoothedVol, 0.0, 0.05, 0.0, 1, true);
     
-    float mappedSpeed = ofMap(smoothedVol, 0.0, 0.05, 2, 10, true);
-    float mappedForce = ofMap(smoothedVol, 0.0, 0.05, 0, 2, true);
+    float mappedSpeed = ofMap(smoothedVol, 0.0, maxvol, 2, 10, true);
+    float mappedForce = ofMap(smoothedVol, 0.0, maxvol, 0, 2, true);
 
 
     //cout<<smoothedVol<<" "<<mappedVol<<" "<<mappedSpeed<<endl;
@@ -139,14 +158,9 @@ void ofApp::update(){
             agents[i]->setSeekForce(0);
 
         };
+        agents[i]->setWanderForce(wanderforce);
+        agents[i]->setSpinForce(rotationforce);
 
-            //  agents[i]->setSeekForce(mx);
-        
-        
-       
-        //agents[i]->setOffscreenForce(scaledVol);
-        //agents[i]->setRepulsionForce(scaledVol*10);
-        
     }
 
     
@@ -159,7 +173,12 @@ void ofApp::update(){
         volHistory.erase(volHistory.begin(), volHistory.begin()+1);
     }
 
+    cout<<renderdAgents<<endl;
+    if(renderdAgents<targetAgentsNum){
+        renderdAgents+=5;
+    }
     
+    shrink();
     
 }
 
@@ -200,6 +219,36 @@ void ofApp::draw(){
  
     
     ofDisablePointSprites();
+    
+    camera.begin();
+/*
+    if(ofGetFrameNum()%3==0){
+        me++;
+        if(me>renderdAgents)me=1;
+        other=me-1;
+        polyline.addVertex(points[me]);
+        
+        
+        if (polyline.size() > 5){
+            polyline.getVertices().erase(
+            polyline.getVertices().begin()
+            );
+        }
+        
+       // if(polyline>10)polyline.
+    }
+    ofSetColor(255, 100, 90,10);
+    ofSetLineWidth(15);
+    //ofDrawLine(points[me], points[other]);
+    
+    polyline.draw();
+  */
+
+    
+    camera.end();
+
+
+    
     ofDisableBlendMode();
     
       fbo.end();
@@ -209,7 +258,20 @@ void ofApp::draw(){
 
     camera.end();
     
+
     
+    /*
+    ofEnableAlphaBlending();
+    camera.begin();
+    for (unsigned int i=0; i<points.size(); i++) {
+        ofSetColor(255, 80);
+        ofVec3f mid = points[i];
+        mid.normalize();
+        mid *= 1000;
+        ofDrawLine(points[i], mid);
+    } 
+    camera.end();
+*/
     
    /*
     for(int i=0; i<agents.size(); i++) {
@@ -220,6 +282,8 @@ void ofApp::draw(){
 
     
     glDepthMask(GL_TRUE);
+   
+
     /*
     ofSetColor(255, 100);
     ofDrawRectangle(0, 0, 250, 90);
@@ -231,7 +295,9 @@ void ofApp::draw(){
     ofDrawBitmapString(info, 20, 20);
     */
 
-   // ofDrawBox(ofGetWidth()/2, ofGetHeight()/2, 0, 10, 10, 10);
+    ofSetColor(0, 255, 0);
+
+    ofDrawBox(ofGetWidth()/2, ofGetHeight()/2, 0, 10, 10, 10);
     
     
     // draw the average volume:
@@ -261,12 +327,42 @@ void ofApp::draw(){
     
     ofPopMatrix();
     ofPopStyle();
+    
+    
+    // auto draw?
+    // should the gui control hiding?
+    if(!bHide){
+        gui.draw();
+    }
 
     
 }
 
+void ofApp::addAgents(int num){
+    targetAgentsNum=targetAgentsNum+num;
+    if(targetAgentsNum>totalNumAgents)targetAgentsNum=totalNumAgents;
+    cout<<"targetAgentsNum "<<targetAgentsNum<<" "<<totalNumAgents<<endl;
+}
+
+
+void ofApp::shrink(){
+    int diff=targetPointSize-pointsize;
+    if(diff>0)pointsize+=0.5;
+    if(diff<0)pointsize-=0.5;
+    cout<<"t"<<targetPointSize<<" diff "<<diff<<endl;
+    }
+
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
+    
+    
+    
+    if(key == 'p'){
+        bHide = !bHide;
+        gui.saveToFile("settings.xml");
+
+    }
+    
     
         switch (key) {
             case 'h':
@@ -297,7 +393,7 @@ void ofApp::keyPressed(int key){
                 
             case 'i':
                 for(int i=0;i<agents.size();i++){
-                    agents[i]->setSpinForce(agents[i]->getSpinForce()+0.01);
+                    agents[i]->setSpinForce(rotationforce);
                 }
                 break;
                 
@@ -316,11 +412,41 @@ void ofApp::keyPressed(int key){
             break;
                 
             case 'a':
-                for(int i=0;i<agents.size();i++){
-                    agents[i]->setRandomHomePosition();
-                }
+                //for(int i=0;i<agents.size();i++){
+                  //  agents[i]->setRandomHomePosition();
+               // }
+                //renderdAgents+=100;
+                addAgents(1000);
+                
+            
+                
+               // if(renderdAgents>agents.size())renderdAgents=agents.size();
                 break;
             
+                
+            case'1':
+                targetPointSize=200;
+                break;
+                
+                case'2':
+                targetPointSize=50;
+                break;
+                
+            case'3':
+                targetPointSize=20;
+                break;
+                
+                
+            case'4':
+                targetPointSize=10;
+                break;
+                
+            case'5':
+                targetPointSize=5;
+                break;
+           
+                
+                
             default:
             break;
         }
@@ -356,13 +482,13 @@ void ofApp::mouseMoved(int x, int y ){
     float mx=ofMap(x,0,ofGetWidth(),0,1,true);
     float my=ofMap(y,0,ofGetHeight(),0,5,true);
     
-    cout<<mx<<" "<<my<<endl;
+  //  cout<<mx<<" "<<my<<endl;
     
 
     for(int i=0;i<agents.size();i++){
         
       //  agents[i]->setSeekForce(mx);
-        agents[i]->setWanderForce(my);
+       // agents[i]->setWanderForce(my);
         
     }
     

@@ -114,7 +114,7 @@ void Agent::update(){
     explosionForce*=0.9;
     
 
-    if(maxspeed>4)maxspeed*=0.99;
+    if(maxspeed>2)maxspeed*=0.99;
     
     velocity+=acceleration;
     velocity*=0.98;
