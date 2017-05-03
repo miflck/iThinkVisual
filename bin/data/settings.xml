@@ -1,6 +1,18 @@
 <group>
-	<wanderforce>0.175</wanderforce>
-	<maxvol>0.008245</maxvol>
+	<Agents>
+		<wanderforce>0.5</wanderforce>
+		<rotation>0</rotation>
+	</Agents>
+	<Audio_Settings>
+		<maxvol>0.05</maxvol>
+	</Audio_Settings>
+	<Visuals>
+		<fadespeed>10</fadespeed>
+		<alpha>80</alpha>
+		<edge>1</edge>
+	<brightness>50</brightness>
+	<colorangle>160</colorangle>
+		<Point_Size>100</Point_Size>
+	</Visuals>
 <group/>
-<fadespeed>19.8</fadespeed>
 </group>

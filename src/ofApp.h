@@ -5,6 +5,13 @@
 #include "ofxGui.h"
 #include "ofxSyphon.h"
 
+#include "ofxOsc.h"
+
+
+// listen on port 12345
+#define PORT 12345
+#define NUM_MSG_STRINGS 20
+
 
 
 
@@ -76,18 +83,41 @@ class ofApp : public ofBaseApp{
     
     bool bHide;
 
-    ofxFloatSlider homeforce;
-    ofxFloatSlider wanderforce;
-    ofxFloatSlider rotationforce;
+     ofParameter<float> homeforce;
+    ofParameter<float> wanderforce;
+     ofParameter<float> rotationforce;
+
+    
+   // ofxFloatSlider wanderforce;
 
 
-    ofxFloatSlider maxvol;
+    ofParameter<float> maxvol;
 
+    
+    ofParameter<float> fadespeed;
+    ofParameter<float> alpha;
+    ofParameter<float> brightness;
+    ofParameter<int> colorangle;
+    ofParameter<int> targetPointSize;
+
+    
+
+
+    ofParameter<bool> edge;
+    void onEdgeChange(bool &val);
+    
+    vector<ofxButton > buttons;
+    
+    vector<ofParameter<bool>> devices;
+    
+    void buttonPressed(const void * sender);
+
+    vector<ofSoundDevice> list;
+    
     ofxColorSlider color;
     ofxPanel gui;
 
     
-    ofxFloatSlider fadespeed;
 
     int me, other;
     
@@ -95,17 +125,31 @@ class ofApp : public ofBaseApp{
     ofPolyline polyline;
     
     void addAgents(int num);
+    
+    void removeAgents(int num);
+
+    
    int targetAgentsNum;
     
     int totalNumAgents;
+    int minNumAgents;
     
     void shrink();
-    int targetPointSize;
+    
+
 
     ofxSyphonServer mainOutputSyphonServer;
     ofxSyphonServer individualTextureSyphonServer;
     
     ofxSyphonClient mClient;
+    
+    
+    ofxOscReceiver receiver;
+    
+    int current_msg_string;
+    string msg_strings[NUM_MSG_STRINGS];
+    float timers[NUM_MSG_STRINGS];
+
     
 		
 };

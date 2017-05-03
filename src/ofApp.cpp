@@ -6,8 +6,11 @@ void ofApp::setup(){
     //int numAgents=50000;
     
      totalNumAgents=70000;
-    renderdAgents=1;
-    targetAgentsNum=1;
+    minNumAgents=100;
+    renderdAgents=minNumAgents;
+    targetAgentsNum=minNumAgents;
+    
+    
     for (int i=0;i<totalNumAgents;i++){
         
     //    circles.push_back(shared_ptr<ofxBox2dCircle>(new ofxBox2dCircle));
@@ -32,8 +35,7 @@ void ofApp::setup(){
     //sizes[1]=ofVec3f(20);
     //sizes[2]=ofVec3f(10);
     
-    pointsize=200;
-    targetPointSize=200;
+    pointsize=100;
     
     
     // fill in the colors and vertices
@@ -69,9 +71,11 @@ void ofApp::setup(){
     //Sound
     soundStream.printDeviceList();
     
-    //if you want to set a different device id
-    soundStream.setDeviceID(0); //bear in mind the device id corresponds to all audio devices, including  input-only and output-only devices.
     
+
+    
+    //if you want to set a different device id
+   // soundStream.setDeviceID(0); //bear in mind the device id corresponds to all audio devices, including  input-only and output-only devices.
     int bufferSize = 256;
     
     
@@ -83,13 +87,74 @@ void ofApp::setup(){
     smoothedVol     = 0.0;
     scaledVol		= 0.0;
     soundStream.setup(this, 0, 2, 44100, bufferSize, 4);
+    
+    
+    
     gui.setup(); // most of the time you don't need a name
     //gui.add(color.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
    // gui.add(homeforce.setup("homeforce", 1, 0, 5));
-    gui.add(wanderforce.setup("wanderforce", 0.5, 0.0f, 1.5f));
-    gui.add(maxvol.setup("maxvol", 0.05, 0.001f, 0.07f));
-    gui.add(fadespeed.setup("fadespeed", 10, 0.0f, 30.0f));
-    gui.add(rotationforce.setup("rotation", 0.f, -.05f, 0.05f));
+    ofParameterGroup agentsparams;
+    agentsparams.setName("Agents");
+    wanderforce.set("wanderforce", 0.5, 0.0f, 1.5f);
+    agentsparams.add(wanderforce);
+    rotationforce.set("rotation", 0.f, -.05f, 0.05f);
+    agentsparams.add(rotationforce);
+    gui.add(agentsparams);
+    
+    ofParameterGroup audioparams;
+    audioparams.setName("Audio Settings");
+    maxvol.set("maxvol", 0.05, 0.001f, 0.07f);
+    audioparams.add(maxvol);
+    
+    
+ 
+    
+
+    
+    gui.add(audioparams);
+
+    ofParameterGroup visual;
+    visual.setName("Visuals");
+    fadespeed.set("fadespeed", 10, 0.0f, 200.0f);
+    visual.add(fadespeed);
+    alpha.set("alpha", 80, 10.0f, 255.0f);
+    visual.add(alpha);
+    brightness.set("brightness", 50, 10.0f, 255.0f);
+    visual.add(brightness);
+    colorangle.set("colorangle", 160, 0.0f, 255.0f);
+    visual.add(colorangle);
+    targetPointSize.set("Point Size", 100, 1.0f, 200);
+    visual.add(targetPointSize);
+
+    
+    edge.set("edge",false);
+    visual.add(edge);
+
+    gui.add(visual);
+    
+    ofParameterGroup devices;
+
+    
+    list=soundStream.getDeviceList();
+    for(auto device : list) {
+        ofxButton b;
+        buttons.push_back(b);
+     //   ofParameter<bool> d;
+      //  d.set(device.name,false);
+      //  devices.add(d);
+        
+    }
+    // gui.add(devices);
+   // devices.addListener(this,&ofApp::buttonPressed);
+
+    
+    for(int i=0;i<buttons.size();i++){
+        gui.add(buttons[i].setup(list[i].name));
+        buttons[i].addListener(this,&ofApp::buttonPressed);
+
+    }
+    
+    edge.addListener(this, &ofApp::onEdgeChange);
 
     
     gui.loadFromFile("settings.xml");
@@ -108,11 +173,66 @@ void ofApp::setup(){
 
     
     
+    // listen on the given port
+    cout << "listening for osc messages on port " << PORT << "\n";
+    receiver.setup(PORT);
+    
+    current_msg_string = 0;
+
+    
     
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    
+    
+    while(receiver.hasWaitingMessages()){
+    
+        // get the next message
+        ofxOscMessage m;
+        receiver.getNextMessage(m);
+        
+        // check for mouse moved message
+        if(m.getAddress() == "/agents/add"){
+            int anz = m.getArgAsInt32(0);
+            addAgents(anz);
+        }
+        
+        
+        
+        // check for mouse moved message
+        if(m.getAddress() == "/agents/total"){
+            int anz = m.getArgAsInt32(0);
+            if(anz > totalNumAgents)anz=totalNumAgents;
+            renderdAgents=anz;
+            targetAgentsNum=anz;
+            
+          
+        }
+        
+        
+        if(m.getAddress() == "/agents/remove"){
+            int anz = m.getArgAsInt32(0);
+            removeAgents(anz);
+        }
+        
+        
+        if(m.getAddress() == "/agents/pointsize"){
+            int size = m.getArgAsInt32(0);
+            if(size<5)size=5;
+            if(size>200)size=200;
+            targetPointSize=size;
+        }
+        
+        if(m.getAddress() == "/color"){
+            int angle = m.getArgAsInt32(0);
+            colorangle=angle;
+        }
+        
+        
+    }
+    
     
     
     /*for(int i=0; i<agents.size(); i++) {
@@ -187,9 +307,14 @@ void ofApp::update(){
         volHistory.erase(volHistory.begin(), volHistory.begin()+1);
     }
 
-    cout<<renderdAgents<<endl;
+   // cout<<renderdAgents<<endl;
     if(renderdAgents<targetAgentsNum){
         renderdAgents+=5;
+    }
+ 
+    // cout<<renderdAgents<<endl;
+    if(renderdAgents>targetAgentsNum){
+        renderdAgents-=5;
     }
     
     shrink();
@@ -206,8 +331,12 @@ void ofApp::draw(){
     glDepthMask(GL_FALSE);
 
 //    ofSetColor(255, 100, 90,50);
-    ofSetColor(90, 100, 255,80);
-
+    
+    ofColor c;
+    c.setHsb(colorangle, 150, brightness);
+    
+    //ofSetColor(90, 100, 255,80);
+    ofSetColor(c,alpha);
     
     // this makes everything look glowy :)
    ofEnableBlendMode(OF_BLENDMODE_ADD);
@@ -365,6 +494,13 @@ void ofApp::draw(){
 void ofApp::addAgents(int num){
     targetAgentsNum=targetAgentsNum+num;
     if(targetAgentsNum>totalNumAgents)targetAgentsNum=totalNumAgents;
+    cout<<"targetAgentsNum "<<targetAgentsNum<<" "<<totalNumAgents<<endl;
+}
+
+
+void ofApp::removeAgents(int num){
+    targetAgentsNum=targetAgentsNum-num;
+    if(targetAgentsNum<minNumAgents)targetAgentsNum=minNumAgents;
     cout<<"targetAgentsNum "<<targetAgentsNum<<" "<<totalNumAgents<<endl;
 }
 
@@ -559,6 +695,35 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
+
+
+//--------------------------------------------------------------
+void ofApp::onEdgeChange(bool &val){
+    if(val) {
+        ofLoadImage(texture, "dot.png");
+    }else{
+        ofLoadImage(texture, "dot_sharp.png");
+    }
+
+}
+
+void ofApp::buttonPressed(const void * sender){
+    ofxButton * button = (ofxButton*)sender;
+    cout<<button->getName()<<endl;
+
+
+    for(int i=0;i<list.size();i++){
+        if(list[i].name==button->getName()){
+            soundStream.close();
+            soundStream.setDevice(list[i]);
+            soundStream.setup(this, 0, 2, 44100, 256, 4);
+        }
+        
+    }
+    
+    
+}
+
 
 //--------------------------------------------------------------
 void ofApp::audioIn(float * input, int bufferSize, int nChannels){
