@@ -95,6 +95,10 @@ void ofApp::setup(){
    // gui.add(homeforce.setup("homeforce", 1, 0, 5));
     ofParameterGroup agentsparams;
     agentsparams.setName("Agents");
+    
+    renderdAgentsSlider.set("renderd Agents", minNumAgents, 0.0f, totalNumAgents);
+    renderdAgentsSlider.addListener(this, &ofApp::totalAgentsChanged);
+    agentsparams.add(renderdAgentsSlider);
     wanderforce.set("wanderforce", 0.5, 0.0f, 1.5f);
     agentsparams.add(wanderforce);
     rotationforce.set("rotation", 0.f, -.05f, 0.05f);
@@ -183,6 +187,12 @@ void ofApp::setup(){
     
 }
 
+void ofApp::totalAgentsChanged(int & totalagents){
+    targetAgentsNum=totalagents;
+    renderdAgents=totalagents;
+
+}
+
 //--------------------------------------------------------------
 void ofApp::update(){
     
@@ -200,15 +210,12 @@ void ofApp::update(){
         }
         
         
-        
         // check for mouse moved message
         if(m.getAddress() == "/agents/total"){
             int anz = m.getArgAsInt32(0);
             if(anz > totalNumAgents)anz=totalNumAgents;
             renderdAgents=anz;
             targetAgentsNum=anz;
-            
-          
         }
         
         
@@ -225,9 +232,48 @@ void ofApp::update(){
             targetPointSize=size;
         }
         
+        
+        if(m.getAddress() == "/rotation"){
+            int rot = m.getArgAsInt32(0);
+            rotationforce=ofMap(rot,-255,255,-0.05,0.05);
+            cout<<rotationforce<<endl;
+        }
+        
+        
+        if(m.getAddress() == "/wanderforce"){
+            int w = m.getArgAsInt32(0);
+            wanderforce=ofMap(w,0,255,0.5,1.5);
+            cout<<wanderforce<<endl;
+        }
+        
+        
+        
         if(m.getAddress() == "/color"){
             int angle = m.getArgAsInt32(0);
             colorangle=angle;
+        }
+        
+        
+        if(m.getAddress() == "/brightness"){
+            int b = m.getArgAsInt32(0);
+            brightness=b;
+        }
+ 
+        if(m.getAddress() == "/fadespeed"){
+            int b = m.getArgAsInt32(0);
+            fadespeed=b;
+        }
+        
+        if(m.getAddress() == "/alpha"){
+            int b = m.getArgAsInt32(0);
+            alpha=b;
+        }
+        
+        
+        if(m.getAddress() == "/volume"){
+            int w = m.getArgAsInt32(0);
+            maxvol=ofMap(w,0,255,0.001f,0.07f);
+
         }
         
         
@@ -285,16 +331,13 @@ void ofApp::update(){
         agents[i]->homedirthetaDiff=mappedVolTheta;
         if(mappedSpeed>2.5) agents[i]->addSpeed();
         
-        if(ofRandom(1)<0.2){
+       // if(ofRandom(1)<0.2){
             agents[i]->setSeekForce(mappedForce);
-
-        }else{
-            agents[i]->setSeekForce(0);
-
-        };
+       // }else{
+        //    agents[i]->setSeekForce(0);
+       // };
         agents[i]->setWanderForce(wanderforce);
         agents[i]->setSpinForce(rotationforce);
-
     }
 
     

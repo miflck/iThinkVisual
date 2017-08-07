@@ -60,7 +60,15 @@ class ofApp : public ofBaseApp{
     
     int numAgents;
 
-    int renderdAgents;
+int renderdAgents;
+    
+    ofParameter<int> renderdAgentsSlider;
+
+    
+    void totalAgentsChanged(int & totalagents);
+
+    
+    
     int pointsize;
     
     
